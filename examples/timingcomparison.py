@@ -29,8 +29,15 @@ if __name__ == "__main__":
                     "params": {"loc": 2.0, "scale": 1.0}
                 }
 
+    statistics_spec = {
+        "type": "statistics",
+        "name": "normal",
+        "params": {"mu": 2.0, "sigma": 1.0}
+    }
+
     time_me(scipy_spec)
     time_me(builtin_spec)
+    time_me(statistics_spec)
 
 
 
