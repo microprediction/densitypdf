@@ -13,6 +13,7 @@ Evaluation of univariate density functions defined in the `density` package.
     from densitypdf import density_pdf
 
     # Example mixture with one scipy normal and one builtin normal
+
     mixture_spec = {
         "type": "mixture",
         "components": [
@@ -27,8 +28,8 @@ Evaluation of univariate density functions defined in the `density` package.
             {
                 "density": {
                     "type": "builtin",
-                    "name": "normal",
-                    "params": {"mu": 2.0, "sigma": 1.0}
+                    "name": "norm",
+                    "params": {"loc": 2.0, "scale": 1.0}
                 },
                 "weight": 0.4
             }
@@ -36,4 +37,6 @@ Evaluation of univariate density functions defined in the `density` package.
     }
 
     val = density_pdf(mixture_spec, x=0.0)
+
+The `builtin` options are replacements for scipy.stats distributions that are more suitable for single use, when you don't want to incur instantiation overhead in scipy. 
 
