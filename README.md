@@ -1,6 +1,6 @@
 
 # Density PDF 
-Evaluation of univariate density functions, and mixtures of the same, defined in the `density` package.
+Evaluation of univariate density functions defined in the `density` package.
 
 
 ## Install
@@ -37,4 +37,3 @@ Evaluation of univariate density functions, and mixtures of the same, defined in
 
     val = density_pdf(mixture_spec, x=0.0)
 
-   
