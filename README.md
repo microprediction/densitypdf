@@ -1,6 +1,6 @@
 
-# Density PDF 
-Evaluation of univariate density functions defined in the `density` package.
+# Density PDF ![tests_312](https://github.com/microprediction/densitypdf/workflows/tests_312/badge.svg)
+Evaluation of univariate density functions defined in the `density` package, which btw is ![tests_312](https://github.com/microprediction/density/workflows/tests_312/badge.svg)
 
 
 ## Install
