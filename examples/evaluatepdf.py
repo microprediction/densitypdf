@@ -3,6 +3,7 @@ from densitypdf import density_pdf
 import time
 
 if __name__ == "__main__":
+
     # Example mixture with one scipy normal and one builtin normal
     mixture_spec = {
         "type": "mixture",

@@ -1,5 +1,6 @@
 import scipy.stats as st
 from statistics import NormalDist
+from densitypdf.builtin.builtindensitypdf import builtin_density_pdf
 
 
 def density_pdf(
@@ -22,13 +23,20 @@ def density_pdf(
              "name": "norm",
              "params": {"loc": 0, "scale": 1}
            }
-        2) Builtin distribution:
+        2) Statistics distribution:
            {
              "type": "builtin",
              "name": "normal",
              "params": {"mu": 2.0, "sigma": 1.0}
            }
-        3) Mixture distribution:
+        3) Builtin distribution:  (same as scipy)
+            {
+             "type": "builtin",
+             "name": "norm",
+             "params": {"loc": 0, "scale": 1}
+           }
+
+        4) Mixture distribution:
            {
              "type": "mixture",
              "components": [
@@ -93,17 +101,21 @@ def density_pdf(
         dist_obj = dist_class(**params)
         return dist_obj.pdf(x)
 
-    # 3) Builtin distribution
-    elif dist_type == "builtin":
+    # 3) Statistics distribution
+    elif dist_type == "statistics":
         bname = density_dict["name"]
         bparams = density_dict["params"]
         if bname == "normal":
-            mu = bparams.get("mu", 0.0)
-            sigma = bparams.get("sigma", 1.0)
+            mu = bparams.get("mu", bparams.get("loc", 0.0))
+            sigma = bparams.get("sigma", 1.0, bparams.get("scale", 1.0))
             dist_obj = NormalDist(mu=mu, sigma=sigma)
             return dist_obj.pdf(x)
         else:
             raise NotImplementedError(f"Unsupported builtin distribution '{bname}'")
+
+    # 3) Builtin distribution
+    elif dist_type == "builtin":
+        return builtin_density_pdf(density_dict, x)
 
     else:
         raise ValueError(

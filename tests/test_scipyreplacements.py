@@ -1,14 +1,72 @@
-import pytest
 import math
-import scipy.stats as st
-
-##############################################
-# 1) INTEGRATION TESTS FOR SINGLE DISTRIBUTIONS
-##############################################
-
 import pytest
-import math
-import scipy.stats as st
+
+
+from densitypdf.builtin.scipyreplacements import (
+    norm_pdf_scalar,
+    expon_pdf_scalar,
+    t_pdf_scalar,
+    weibull_min_pdf_scalar,
+    gamma_pdf_scalar,
+    weibull_max_pdf_scalar,
+    beta_pdf_scalar,
+    lognorm_pdf_scalar,
+    chi_pdf_scalar,
+    chi2_pdf_scalar,
+    rayleigh_pdf_scalar,
+    pareto_pdf_scalar,
+    cauchy_pdf_scalar,
+    laplace_pdf_scalar,
+    f_pdf_scalar
+)
+
+# We'll also import scipy.stats and create a small "dispatcher" so we can do
+# pdf_scipy("norm", x, loc=..., scale=...) easily.
+from math import isclose
+from scipy.stats import (
+    norm, expon, t, weibull_min, gamma, weibull_max, beta, lognorm,
+    chi, chi2, rayleigh, pareto, cauchy, laplace, f
+)
+
+# A dictionary that maps distribution name -> "callable returning a scipy.stats frozen dist"
+# so that we can do dist.pdf(x).
+SCIPY_FACTORY = {
+    "norm":         lambda **p: norm(loc=p["loc"], scale=p["scale"]),
+    "expon":        lambda **p: expon(loc=p["loc"], scale=p["scale"]),
+    "t":            lambda **p: t(df=p["df"], loc=p["loc"], scale=p["scale"]),
+    "weibull_min":  lambda **p: weibull_min(c=p["c"], loc=p["loc"], scale=p["scale"]),
+    "gamma":        lambda **p: gamma(a=p["a"], loc=p["loc"], scale=p["scale"]),
+    "weibull_max":  lambda **p: weibull_max(c=p["c"], loc=p["loc"], scale=p["scale"]),
+    "beta":         lambda **p: beta(a=p["a"], b=p["b"], loc=p["loc"], scale=p["scale"]),
+    "lognorm":      lambda **p: lognorm(s=p["s"], loc=p["loc"], scale=p["scale"]),
+    "chi":          lambda **p: chi(df=p["df"], loc=p["loc"], scale=p["scale"]),
+    "chi2":         lambda **p: chi2(df=p["df"], loc=p["loc"], scale=p["scale"]),
+    "rayleigh":     lambda **p: rayleigh(loc=p["loc"], scale=p["scale"]),
+    "pareto":       lambda **p: pareto(b=p["b"], loc=p["loc"], scale=p["scale"]),
+    "cauchy":       lambda **p: cauchy(loc=p["loc"], scale=p["scale"]),
+    "laplace":      lambda **p: laplace(loc=p["loc"], scale=p["scale"]),
+    "f":            lambda **p: f(dfn=p["dfn"], dfd=p["dfd"], loc=p["loc"], scale=p["scale"]),
+}
+
+# Similarly, a dispatcher for your custom PDF scalar functions
+CUSTOM_PDF = {
+    "norm":         norm_pdf_scalar,
+    "expon":        expon_pdf_scalar,
+    "t":            t_pdf_scalar,
+    "weibull_min":  weibull_min_pdf_scalar,
+    "gamma":        gamma_pdf_scalar,
+    "weibull_max":  weibull_max_pdf_scalar,
+    "beta":         beta_pdf_scalar,
+    "lognorm":      lognorm_pdf_scalar,
+    "chi":          chi_pdf_scalar,
+    "chi2":         chi2_pdf_scalar,
+    "rayleigh":     rayleigh_pdf_scalar,
+    "pareto":       pareto_pdf_scalar,
+    "cauchy":       cauchy_pdf_scalar,
+    "laplace":      laplace_pdf_scalar,
+    "f":            f_pdf_scalar,
+}
+
 
 
 @pytest.mark.parametrize("name, params, x, expected_pdf", [
@@ -133,105 +191,30 @@ import scipy.stats as st
     ("cauchy", {'scale': 1.03, 'loc': 0.47}, 2.11, 0.08741745974),
     ("chi2", {'df': 1.7, 'scale': 1.44, 'loc': 0.29}, 2.32, 0.1625477707),
 ])
-def test_integration_scipy_pdf(name, params, x, expected_pdf):
+
+def test_pdf_agreement(name, params, x, expected_pdf):
     """
-    Evaluate the PDF at a specified point x and compare to the known numeric value.
+    Test that our custom PDF matches (a) SciPy's pdf and (b) the `expected_pdf`
+    from the big table, within a reasonable tolerance.
     """
-    dist_class = getattr(st, name)
-    dist = dist_class(**params)
-    got_pdf = dist.pdf(x)
+    # 1) SciPy PDF
+    # If the distribution is out-of-domain, SciPy might return 0 or a very small positive number.
+    dist = SCIPY_FACTORY[name](**params)
+    scipy_val = dist.pdf(x)
 
-    assert math.isclose(got_pdf, expected_pdf, rel_tol=1e-5), \
-        f"PDF mismatch for {name} at x={x}: got {got_pdf}, expected {expected_pdf}"
+    # 2) Custom PDF
+    custom_val = CUSTOM_PDF[name](x, **params)
 
+    # 3) Compare to expected_pdf from your table
+    # Some lines are exactly 0.0. Others might be small numbers. We use approx with a small tolerance.
+    # Because PDFs can vary in scale, we use a combo of absolute and relative tolerance.
+    # For example, we'll do pytest's builtin approx with rel=1e-5, abs=1e-12 (you can adjust).
+    assert custom_val == pytest.approx(expected_pdf, rel=1e-5, abs=1e-12), (
+        f"Custom PDF mismatch with expected_pdf for {name}, params={params}, x={x}"
+    )
 
-def test_mixture_two_components():
-    """
-    Mixture of two distributions (norm + expon). Evaluate at x=0.
-    Weighted sum = 0.6*norm(0,1).pdf(0) + 0.4*expon(0,2).pdf(0).
-    """
-    mixture_spec = {
-        "type": "mixture",
-        "components": [
-            {
-                "density": {
-                    "type": "scipy",
-                    "name": "norm",
-                    "params": {"loc": 0, "scale": 1}
-                },
-                "weight": 0.6
-            },
-            {
-                "density": {
-                    "type": "scipy",
-                    "name": "expon",
-                    "params": {"loc": 0, "scale": 2}
-                },
-                "weight": 0.4
-            }
-        ]
-    }
-
-    # Manually compute the PDF at x=0
-    pdf_norm_0 = st.norm(loc=0, scale=1).pdf(0)  # ~0.3989422804
-    pdf_expon_0 = st.expon(loc=0, scale=2).pdf(0)  # 0.5
-    expected_pdf = 0.6 * pdf_norm_0 + 0.4 * pdf_expon_0
-
-    # If you have a function like `evaluate_density_dict`, call it here.
-    # Otherwise, let's just check that our manual sum is correct:
-    got_pdf = expected_pdf  # placeholder for a real evaluator
-
-    assert math.isclose(got_pdf, expected_pdf, rel_tol=1e-7), \
-        f"Mixture PDF mismatch at x=0. got {got_pdf}, expected {expected_pdf}"
-
-
-def test_mixture_three_components():
-    """
-    Another example mixture with 3 distributions:
-       30% norm(1,1), 50% rayleigh(0,2), 20% cauchy(0,2).
-    Evaluate at x=1.0.
-    """
-    mixture_spec = {
-        "type": "mixture",
-        "components": [
-            {
-                "density": {
-                    "type": "scipy",
-                    "name": "norm",
-                    "params": {"loc": 1, "scale": 1}
-                },
-                "weight": 0.3
-            },
-            {
-                "density": {
-                    "type": "scipy",
-                    "name": "rayleigh",
-                    "params": {"loc": 0, "scale": 2}
-                },
-                "weight": 0.5
-            },
-            {
-                "density": {
-                    "type": "scipy",
-                    "name": "cauchy",
-                    "params": {"loc": 0, "scale": 2}
-                },
-                "weight": 0.2
-            },
-        ]
-    }
-    x_val = 1.0
-    # Manually compute the PDF
-    pdf_norm_1 = st.norm(loc=1, scale=1).pdf(x_val)  # ~0.3989
-    pdf_rayleigh_1 = st.rayleigh(loc=0, scale=2).pdf(x_val)  # ~0.2206
-    pdf_cauchy_1 = st.cauchy(loc=0, scale=2).pdf(x_val)
-
-    expected_pdf = 0.3 * pdf_norm_1 + 0.5 * pdf_rayleigh_1 + 0.2 * pdf_cauchy_1
-
-    # In a real scenario, you'd do:
-    # got_pdf = evaluate_density_dict(mixture_spec, x=1.0)
-    # For demonstration, we just set it to the same value:
-    got_pdf = expected_pdf
-
-    assert math.isclose(got_pdf, expected_pdf, rel_tol=1e-7), \
-        f"Mixture PDF mismatch at x=1.0. got {got_pdf}, expected {expected_pdf}"
+    # 4) Compare custom vs SciPy
+    # If both are near zero, that's fine; if one is 1e-15 and the other is 0, we might treat that as "close enough".
+    assert custom_val == pytest.approx(scipy_val, rel=1e-5, abs=1e-12), (
+        f"Custom PDF mismatch vs SciPy for {name}, params={params}, x={x}"
+    )

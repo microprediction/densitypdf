@@ -20,7 +20,8 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.12",
     ],
-    packages=["density","scipy"
+    packages=["densitypdf",
+              "densitypdf.builtin"
               ],
     test_suite='pytest',
     tests_require=['pytest'],

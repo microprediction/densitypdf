@@ -1,6 +1,6 @@
 
 # Density PDF 
-Evaluation of univariate density functions defined in the `density` package.
+Evaluation of univariate density functions, and mixtures of the same, defined in the `density` package.
 
 
 ## Install
