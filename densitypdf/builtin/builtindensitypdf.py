@@ -40,8 +40,8 @@ def builtin_density_pdf(density_dict, x):
     bparams = density_dict["params"]
 
     if bname in ["normal", "norm"]:
-        mu = bparams["mu"]  # must exist
-        sigma = bparams["sigma"]  # must exist
+        mu = bparams['loc']         # one must exist
+        sigma = bparams['scale']  # one must exist
         return norm_pdf_scalar(x, loc=mu, scale=sigma)
 
     elif bname == "lognorm":

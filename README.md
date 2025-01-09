@@ -38,7 +38,7 @@ Evaluation of univariate density functions defined in the `density` package.
 
     val = density_pdf(mixture_spec, x=0.0)
 
-The `builtin` options are replacements for scipy.stats distributions that are more suitable for single use, when you don't want to incur instantiation overhead in scipy. 
+The `builtin` options are replacements for scipy.stats distributions should you wish to use them. 
 
 ## Specifying densities or mixtures of the same
 
