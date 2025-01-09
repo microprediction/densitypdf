@@ -40,3 +40,10 @@ Evaluation of univariate density functions defined in the `density` package.
 
 The `builtin` options are replacements for scipy.stats distributions that are more suitable for single use, when you don't want to incur instantiation overhead in scipy. 
 
+## Specifying densities or mixtures of the same
+
+See [examples](https://github.com/microprediction/density/tree/main/examples) of specifying densities. 
+
+See the [Scipy manifest](https://github.com/microprediction/density/blob/main/density/schemachecker/scipydensitymanifest.py) for a list of densities. 
+
+Note the mixture pattern above, to. 
