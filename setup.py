@@ -7,7 +7,7 @@ README = (HERE / "README.md").read_text()
 
 setup(
     name="densitypdf",
-    version="0.1.2",
+    version="0.1.3",
     description="Evaluation of probability density functions",
     long_description=README,
     long_description_content_type="text/markdown",
